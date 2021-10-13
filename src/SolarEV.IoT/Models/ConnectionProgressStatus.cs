@@ -1,4 +1,4 @@
-﻿namespace FormsIoT.Models
+﻿namespace SolarEV.IoT.Models
 {
     public enum ConnectionProgressStatus
     {

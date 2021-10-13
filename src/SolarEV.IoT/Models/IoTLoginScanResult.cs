@@ -1,5 +1,5 @@
 ﻿using System;
-namespace FormsIoT.Models
+namespace SolarEV.IoT.Models
 {
     public class IoTLoginScanResult
     {
