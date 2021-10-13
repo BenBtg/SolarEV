@@ -1,0 +1,49 @@
+<solar id='44371914C6DE'>
+    <timestamp>1634117117</timestamp>
+    <current>
+        <generating units='w'>504.00</generating>
+        <exporting units='w'>0.00</exporting>
+    </current>
+    <day>
+        <generated units='wh'>807.96</generated>
+        <exported units='wh'>0.00</exported>
+    </day>
+</solar>
+
+/curr>
+<day units='wh'>799.88</day>
+</chan>
+<chan id='2'>
+    <curr units='w'>0.00</curr>
+    <day units='wh'>0.00</day>
+</chan>
+<chan id='3'>
+    <curr units='w'>0.00</curr>
+    <day units='wh'>0.00</day>
+</chan>
+<chan id='4'>
+    <curr units='w'>0.00</curr>
+    <day units='wh'>0.00</day>
+</chan>
+<chan id='5'>
+    <curr units='w'>0.00</curr>
+    <day units='wh'>0.00</day>
+</chan>
+</channels>
+<property>
+    <current>
+        <watts>869.00</watts>
+        <cost>5.73</cost>
+    </current>
+    <day>
+        <wh>7951.39</wh>
+        <cost>99.53</cost>
+    </day>
+    <tariff time='1634120633'>
+        <start>1634099400</start>
+        <curr_price>0.14</curr_price>
+        <block_limit>4294967295</block_limit>
+        <block_usage>3594</block_usage>
+    </tariff>
+</property>
+</electricity>
