@@ -24,12 +24,11 @@ namespace SolarEV.TransportProtocols.Utilities
       Console.WriteLine("End");
     }
 
-
     static IHostBuilder CreateHostBuilder(string[] args) =>
       Host.CreateDefaultBuilder(args)
           .ConfigureServices((_, services) =>
               services.AddSingleton<ISolarListener, SolarListener>()
-                      .AddSingleton<IDeviceClientService, DeviceClientService>()
+                      .AddSingleton<IIoTDeviceClientService, IoTDeviceClientService>()
                       .AddSingleton<IDeviceConfigService, DeviceConfigService>());
   }
 }
