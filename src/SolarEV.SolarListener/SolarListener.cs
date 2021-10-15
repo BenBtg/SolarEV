@@ -17,12 +17,6 @@ namespace SolarEV.Services
 
         public event EventHandler<SolarMessageEventArgs> SolarMessageReceived;
 
-        private static void MulticastOptionProperties()
-        {
-            Console.WriteLine("Current multicast group is: " + multicastOption.Group);
-            Console.WriteLine("Current multicast local address is: " + multicastOption.LocalAddress);
-        }
-
         public SolarListener()
         {
 
@@ -32,8 +26,8 @@ namespace SolarEV.Services
             // Start a multicast group.
             StartMulticast();
 
-            // Display MulticastOption properties.
-            MulticastOptionProperties();
+            Console.WriteLine("Current multicast group is: " + multicastOption.Group);
+            Console.WriteLine("Current multicast local address is: " + multicastOption.LocalAddress);
 
             // Receive broadcast messages.
             ReceiveBroadcastMessages();

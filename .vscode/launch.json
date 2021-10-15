@@ -1,4 +1,7 @@
 {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -6,25 +9,11 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/SolarEV/bin/Debug/net5.0/SolarEV.dll",
+            "program": "${workspaceFolder}/src/SolarEV/bin/Debug/net5.0/SolarEV.exe",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "console": "internalConsole",
-            "stopAtEntry": false
-        },
-        {
-            "name": ".NET Core Attach",
-            "type": "coreclr",
-            "request": "attach"
-        },
-        {
-            "name": "Docker .NET Core Launch",
-            "type": "docker",
-            "request": "launch",
-            "preLaunchTask": "docker-run: debug",
-            "netCore": {
-                "appProject": "${workspaceFolder}/SolarEV/SolarEV.csproj"
-            }
+            "stopAtEntry": false,
+            "console": "internalConsole"
         }
     ]
 }

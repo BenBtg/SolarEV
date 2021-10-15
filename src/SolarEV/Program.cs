@@ -20,8 +20,17 @@ namespace SolarEV.TransportProtocols.Utilities
       ISolarListener listener = new SolarListener();
       using IHost host = CreateHostBuilder(args).Build();       
       await host.RunAsync();     
-
+      ISolarListener solarListener = host.Services.GetService<ISolarListener>();
+      IIoTDeviceClientService deviceClientService = host.Services.GetService<IIoTDeviceClientService>();
+      await deviceClientService.ConnectAsync();
+      await solarListener.StartListeningAsync();
+      solarListener.SolarMessageReceived += SolarListener_SolarMessageReceived;
       Console.WriteLine("End");
+    }
+
+    private static void SolarListener_SolarMessageReceived(object sender, SolarMessageEventArgs e)
+    {
+      Console.WriteLine(e.Data.Day.Generated);
     }
 
     static IHostBuilder CreateHostBuilder(string[] args) =>

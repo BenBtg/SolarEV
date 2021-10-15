@@ -1,9 +1,0 @@
-
-version: '3.4'
-
-services:
-  solarev:
-    image: solarev
-    build:
-      context: .
-      dockerfile: SolarEV/Dockerfile
