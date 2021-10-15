@@ -20,20 +20,10 @@ namespace SolarEV.Services
         public SolarListener()
         {
 
-            multicastAddress = IPAddress.Parse("224.192.32.19");
-            multicastPort = 22600;
 
-            // Start a multicast group.
-            StartMulticast();
-
-            Console.WriteLine("Current multicast group is: " + multicastOption.Group);
-            Console.WriteLine("Current multicast local address is: " + multicastOption.LocalAddress);
-
-            // Receive broadcast messages.
-            ReceiveBroadcastMessages();
         }
 
-        private static void StartMulticast()
+        private void StartMulticast()
         {
             try
             {
@@ -75,28 +65,34 @@ namespace SolarEV.Services
 
             while (true)
             {
+
+
                 Console.WriteLine("Waiting for multicast packets.......");
                 try
                 {
-                    bytes = new Byte[1024];
-                    multicastSocket.ReceiveFrom(bytes, ref remoteEP);
 
-                    //var text = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
-                    // HACK Ignore electricity price messages for now
-                    if (bytes[1] == 101)
-                        return;
+                    while (true)
+                    {
+                        bytes = new Byte[1024];
+                        multicastSocket.ReceiveFrom(bytes, ref remoteEP);
 
-                    //Console.WriteLine("Received broadcast from {0} :\n {1}\n", remoteEP.ToString(), text);
+                        //var text = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+                            // HACK Ignore electricity price messages for now
+                        if (bytes[1] != 101)
+                        { 
+                            //Console.WriteLine("Received broadcast from {0} :\n {1}\n", remoteEP.ToString(), text);
 
-                    MemoryStream doc = new MemoryStream(bytes);
-                    // var document = new XmlDocument();
-                    // document.Load(doc);
-                    // Console.WriteLine(document.OuterXml);
+                            MemoryStream doc = new MemoryStream(bytes);
+                            // var document = new XmlDocument();
+                            // document.Load(doc);
+                            // Console.WriteLine(document.OuterXml);
 
-                    var solarData = (Solar)solarSerializer.Deserialize(doc);
-                    Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
+                            var solarData = (Solar)solarSerializer.Deserialize(doc);
+                            Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
 
-                    SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
+                            SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
+                        }
+                    }
 
                     //   Console.WriteLine(document.SelectSingleNode("electricity").InnerText);
                 }
@@ -114,7 +110,20 @@ namespace SolarEV.Services
 
         public Task StartListeningAsync()
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                multicastAddress = IPAddress.Parse("224.192.32.19");
+                multicastPort = 22600;
+
+                // Start a multicast group.
+                StartMulticast();
+
+                Console.WriteLine("Current multicast group is: " + multicastOption.Group);
+                Console.WriteLine("Current multicast local address is: " + multicastOption.LocalAddress);
+
+                // Receive broadcast messages.
+                ReceiveBroadcastMessages();
+            });
         }
 
         public Task StopListeningAsync()

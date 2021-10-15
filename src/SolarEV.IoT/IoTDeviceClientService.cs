@@ -117,22 +117,21 @@ namespace SolarEV.IoT
             Debug.WriteLine($"Device properties sent to hub", formattedValue);
         }
 
-        public async Task SendEventAsync(Sensors sensors)
+        public async Task SendEventAsync(Telemetries solarData)
         {
             if (LastKnownConnectionStatus != ConnectionProgressStatus.Connected)
                 return;
 
-            var sensorsData = JsonConvert.SerializeObject(sensors);
+            var sensorsData = JsonConvert.SerializeObject(solarData);
 
             var message = new Message(Encoding.UTF8.GetBytes(sensorsData));
-            message.ComponentName = "sensors";
             message.ContentType = "application/json";
             message.ContentEncoding = "utf-8";
 
             await _deviceClient.SendEventAsync(message).ConfigureAwait(false);
 
-            var formattedValue = $"Accelerometer: {sensors.Accelerometer?.X:0.00},{sensors.Accelerometer?.Y:0.00},{sensors.Accelerometer?.Z:0.00}\nBarometer: {sensors.Barometer}\nBattery: {sensors.Battery}\nGeolocation: {sensors.Geolocation?.Lat:0.00},{sensors.Geolocation?.Lon:0.00} ({sensors.Geolocation?.Alt:0.00})\nMagnetometer: {sensors.Magnetometer}\nOrientation: {sensors.Gyroscope.X:0.00},{sensors.Gyroscope.Y:0.00},{sensors.Gyroscope.Z:0.00},{sensors.Gyroscope.W:0.00}";
-            Debug.WriteLine($"Sensors data sent to hub", formattedValue);
+            //var formattedValue = $"Exporting: {solarData?.Exporting.X:0.00}";
+            //Debug.WriteLine($"Sensors data sent to hub", formattedValue);
         }
 
         #endregion

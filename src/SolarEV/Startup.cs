@@ -31,9 +31,11 @@ namespace SolarEV
                             .AddJsonFile($"appsettings.{environment}.json", optional: true)
                             .AddEnvironmentVariables()
                             .Build();
+                            
 
             // instantiate
             var services = new ServiceCollection();
+
 
             // add necessary services
             services.AddSingleton<IConfiguration>(_configuration);

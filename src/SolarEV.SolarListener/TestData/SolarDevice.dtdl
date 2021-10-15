@@ -1,0 +1,80 @@
+[
+  {
+    "@id": "dtmi:custom2ifxvu6l2c0:SolarDevice41q;1",
+    "@type": "Interface",
+    "contents": [
+      {
+        "@id": "dtmi:custom2ifxvu6l2c0:SolarDevice41q:timestamp;1",
+        "@type": [
+          "Telemetry",
+          "TimeSpan"
+        ],
+        "displayName": {
+          "en": "timestamp"
+        },
+        "name": "timestamp",
+        "schema": "long",
+        "unit": "second"
+      },
+      {
+        "@id": "dtmi:custom2ifxvu6l2c0:SolarDevice41q:generating;1",
+        "@type": [
+          "Telemetry",
+          "Power"
+        ],
+        "displayName": {
+          "en": "generating"
+        },
+        "name": "generating",
+        "schema": "double",
+        "unit": "watt"
+      },
+      {
+        "@id": "dtmi:custom2ifxvu6l2c0:SolarDevice41q:exporting;1",
+        "@type": [
+          "Telemetry",
+          "Power"
+        ],
+        "displayName": {
+          "en": "exporting"
+        },
+        "name": "exporting",
+        "schema": "double",
+        "unit": "watt"
+      },
+      {
+        "@id": "dtmi:custom2ifxvu6l2c0:SolarDevice41q:generated;1",
+        "@type": [
+          "Telemetry",
+          "Power"
+        ],
+        "displayName": {
+          "en": "generated"
+        },
+        "name": "generated",
+        "schema": "double",
+        "unit": "watt"
+      },
+      {
+        "@id": "dtmi:custom2ifxvu6l2c0:SolarDevice41q:exported;1",
+        "@type": [
+          "Telemetry",
+          "Power"
+        ],
+        "displayName": {
+          "en": "exported"
+        },
+        "name": "exported",
+        "schema": "double",
+        "unit": "watt"
+      }
+    ],
+    "displayName": {
+      "en": "SolarDevice"
+    },
+    "@context": [
+      "dtmi:iotcentral:context;2",
+      "dtmi:dtdl:context;2"
+    ]
+  }
+]

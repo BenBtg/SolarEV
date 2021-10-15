@@ -14,7 +14,7 @@ namespace SolarEV.IoT
 
         Task<bool> DisconnectAsync();
 
-        Task SendEventAsync(Sensors sensorsData);
+        Task SendEventAsync(Telemetries solarData);
         //Task SendReportedPropertiesAsync(ReportedDeviceProperties reportedDeviceProperties);
 
         //event EventHandler<SensorCommandPayload> CommandReceivedHandler;

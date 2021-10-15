@@ -14,7 +14,7 @@ namespace SolarEV.IoT
 
         public string DeviceId { get => deviceId; set => deviceId = value; }
         public string ScopeId { get => scopeId; set => scopeId = value; }
-        public string ModelId { get => "dtmi:azureiot:PhoneAsADevice;2"; }
+        public string ModelId { get => "dtmi:azureiot:SolarDevice;2"; }
         public string DeviceKey { get => deviceKey; set => deviceKey = value; }
 
 
