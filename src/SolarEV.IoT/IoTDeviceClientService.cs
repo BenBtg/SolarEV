@@ -169,14 +169,14 @@ namespace SolarEV.IoT
             var modelId = _deviceConfigService.ModelId;
             var dpsSymetricKey = _deviceConfigService.DeviceKey;
 
-            Debug.WriteLine("Provisioing device...");
+            Debug.WriteLine("Provisioning device...");
 
             LastKnownConnectionStatus = ConnectionProgressStatus.Provisioning;
 
             using (var security = new SecurityProviderSymmetricKey(deviceId, dpsSymetricKey, null))
             {
                 Debug.WriteLine($"Security: {deviceId},{dpsSymetricKey}");
-                using (var transport = new ProvisioningTransportHandlerMqtt())
+                using (var transport = new ProvisioningTransportHandlerAmqp())
                 {
                     var provisioningClient = ProvisioningDeviceClient.Create(dpsGlobalEndpoint, dpsIdScope, security, transport);
 

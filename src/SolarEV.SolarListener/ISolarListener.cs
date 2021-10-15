@@ -17,5 +17,9 @@ namespace SolarEV.Services
     public class SolarMessageEventArgs : EventArgs
     {
         public Solar Data;
+        public SolarMessageEventArgs(Solar data)
+        {
+            Data = data;
+        }
     }
 }

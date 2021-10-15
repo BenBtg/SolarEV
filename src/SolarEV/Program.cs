@@ -12,32 +12,36 @@ using SolarEV.IoT;
 
 namespace SolarEV.TransportProtocols.Utilities
 {
-  public class SolarEV
-  {
-   
-    public static async Task Main(string[] args)
+    public class SolarEV
     {
-      ISolarListener listener = new SolarListener();
-      using IHost host = CreateHostBuilder(args).Build();       
-      await host.RunAsync();     
-      ISolarListener solarListener = host.Services.GetService<ISolarListener>();
-      IIoTDeviceClientService deviceClientService = host.Services.GetService<IIoTDeviceClientService>();
-      await deviceClientService.ConnectAsync();
-      await solarListener.StartListeningAsync();
-      solarListener.SolarMessageReceived += SolarListener_SolarMessageReceived;
-      Console.WriteLine("End");
-    }
+        public static async Task Main(string[] args)
+        {
+            // instantiate startup
+            // all the constructor logic would happen
+            var startup = new Startup();
 
-    private static void SolarListener_SolarMessageReceived(object sender, SolarMessageEventArgs e)
-    {
-      Console.WriteLine(e.Data.Day.Generated);
-    }
+            // request an instance of type ISomeService
+            // from the ServicePipeline built
+            // returns an object of type SomeService
+            var solarListener = startup.Provider.GetRequiredService<ISolarListener>();
+            var deviceClientService = startup.Provider.GetRequiredService<IIoTDeviceClientService>();
 
-    static IHostBuilder CreateHostBuilder(string[] args) =>
-      Host.CreateDefaultBuilder(args)
-          .ConfigureServices((_, services) =>
-              services.AddSingleton<ISolarListener, SolarListener>()
-                      .AddSingleton<IIoTDeviceClientService, IoTDeviceClientService>()
-                      .AddSingleton<IDeviceConfigService, DeviceConfigService>());
-  }
+            // call DoProcess on the ISomeService type
+            // should print value for SomeKey on console
+            // fetched from IConfiguration
+            // injected into the class via DI
+
+            solarListener.SolarMessageReceived += SolarListener_SolarMessageReceived;
+
+            await deviceClientService.ConnectAsync();
+            await solarListener.StartListeningAsync();
+
+            Console.WriteLine("End");
+        }
+
+        private static void SolarListener_SolarMessageReceived(object sender, SolarMessageEventArgs e)
+        {
+            Console.WriteLine(e.Data.Day.Generated);
+        }
+    }
 }

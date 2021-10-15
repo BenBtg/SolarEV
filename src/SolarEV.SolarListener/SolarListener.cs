@@ -65,7 +65,7 @@ namespace SolarEV.Services
             }
         }
 
-        private static void ReceiveBroadcastMessages()
+        private void ReceiveBroadcastMessages()
         {
             byte[] bytes;
             IPEndPoint groupEP = new IPEndPoint(multicastAddress, multicastPort);
@@ -96,6 +96,8 @@ namespace SolarEV.Services
                     var solarData = (Solar)solarSerializer.Deserialize(doc);
                     Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
 
+                    SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
+
                     //   Console.WriteLine(document.SelectSingleNode("electricity").InnerText);
                 }
                 catch (Exception e)
@@ -108,11 +110,6 @@ namespace SolarEV.Services
                     StartMulticast();
                 }
             }
-        }
-
-        internal void StartListening()
-        {
-            throw new NotImplementedException();
         }
 
         public Task StartListeningAsync()

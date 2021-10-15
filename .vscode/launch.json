@@ -11,9 +11,14 @@
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/SolarEV/bin/Debug/net5.0/SolarEV.exe",
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
+            "cwd": "${workspaceFolder}/src/SolarEV",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
         }
     ]
 }
