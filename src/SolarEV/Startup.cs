@@ -36,7 +36,6 @@ namespace SolarEV
             // instantiate
             var services = new ServiceCollection();
 
-
             // add necessary services
             services.AddSingleton<IConfiguration>(_configuration);
             services.AddSingleton<ISolarListener, SolarListener>();

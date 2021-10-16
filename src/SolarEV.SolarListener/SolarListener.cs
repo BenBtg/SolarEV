@@ -14,13 +14,13 @@ namespace SolarEV.Services
         private static int multicastPort;
         private static Socket multicastSocket;
         private static MulticastOption multicastOption;
+        private static XmlSerializer _solarSerializer;
 
         public event EventHandler<SolarMessageEventArgs> SolarMessageReceived;
 
         public SolarListener()
         {
-
-
+            XmlSerializer _solarSerializer = new XmlSerializer(typeof(Solar));
         }
 
         private void StartMulticast()
@@ -61,12 +61,9 @@ namespace SolarEV.Services
             IPEndPoint groupEP = new IPEndPoint(multicastAddress, multicastPort);
             EndPoint remoteEP = (EndPoint)new IPEndPoint(IPAddress.Any, 0);
 
-            XmlSerializer solarSerializer = new XmlSerializer(typeof(Solar));
 
             while (true)
             {
-
-
                 Console.WriteLine("Waiting for multicast packets.......");
                 try
                 {
@@ -76,22 +73,7 @@ namespace SolarEV.Services
                         bytes = new Byte[1024];
                         multicastSocket.ReceiveFrom(bytes, ref remoteEP);
 
-                        //var text = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
-                            // HACK Ignore electricity price messages for now
-                        if (bytes[1] != 101)
-                        { 
-                            //Console.WriteLine("Received broadcast from {0} :\n {1}\n", remoteEP.ToString(), text);
-
-                            MemoryStream doc = new MemoryStream(bytes);
-                            // var document = new XmlDocument();
-                            // document.Load(doc);
-                            // Console.WriteLine(document.OuterXml);
-
-                            var solarData = (Solar)solarSerializer.Deserialize(doc);
-                            Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
-
-                            SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
-                        }
+                        NewMethod(bytes, solarSerializer);
                     }
 
                     //   Console.WriteLine(document.SelectSingleNode("electricity").InnerText);
@@ -105,6 +87,26 @@ namespace SolarEV.Services
                     multicastSocket.Close();
                     StartMulticast();
                 }
+            }
+        }
+
+        private void NewMethod(byte[] bytes, XmlSerializer solarSerializer)
+        {
+            //var text = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+            // HACK Ignore electricity price messages for now
+            if (bytes[1] != 101)
+            {
+                //Console.WriteLine("Received broadcast from {0} :\n {1}\n", remoteEP.ToString(), text);
+
+                MemoryStream doc = new MemoryStream(bytes);
+                // var document = new XmlDocument();
+                // document.Load(doc);
+                // Console.WriteLine(document.OuterXml);
+
+                var solarData = (Solar)solarSerializer.Deserialize(doc);
+                Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
+
+                SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
             }
         }
 
