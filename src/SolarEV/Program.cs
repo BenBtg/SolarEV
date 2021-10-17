@@ -25,58 +25,18 @@ namespace SolarEV.TransportProtocols.Utilities
             // all the constructor logic would happen
             var startup = new Startup();
 
-            // request an instance of type ISomeService
-            // from the ServicePipeline built
-            // returns an object of type SomeService
-            var solarListener = startup.Provider.GetRequiredService<ISolarListener>();
-            var deviceConfigService = startup.Provider.GetRequiredService<IDeviceConfigService>();
-            var deviceID = startup.Configuration["DeviceID"];
 
-            deviceConfigService.DeviceId = deviceID;
-            deviceConfigService.DeviceKey = startup.Configuration["PrimaryKey"];
-            deviceConfigService.ScopeId = startup.Configuration["IDScope"];
+            await Host.CreateDefaultBuilder(args)
+                .ConfigureServices((hostContext, services) =>
+                {
+                    services.AddHostedService<ConsoleHostedService>();
+                })
+                .RunConsoleAsync();
 
-            _deviceClientService = startup.Provider.GetRequiredService<IIoTDeviceClientService>();
-
-
-            // call DoProcess on the ISomeService type
-            // should print value for SomeKey on console
-            // fetched from IConfiguration
-            // injected into the class via DI
-
-
-
-            solarListener.SolarMessageReceived += SolarListener_SolarMessageReceived;
-
-            await _deviceClientService.ConnectAsync();
-            await solarListener.StartListeningAsync();
-
-
-            _quitEvent.WaitOne();
             Console.WriteLine("End");
 
         }
 
-        private static async void SolarListener_SolarMessageReceived(object sender, SolarMessageEventArgs e)
-        {
-            Console.WriteLine(e.Data.Day.Generated);
-            var solarData = ConvertSolarToJson(e.Data);
-            await _deviceClientService.SendEventAsync(solarData);
-        }
 
-        static Telemetries ConvertSolarToJson(Solar solar)
-        {
-            //var solarData = new SolarData();
-            var solarData = new Telemetries
-            {
-                Id = solar.Id,
-                Timestamp = solar.Timestamp,
-                Exporting = solar.Current.Exporting.Text,
-                Exported = solar.Day.Exported.Text,
-                Generating = solar.Current.Generating.Text,
-                Generated = solar.Day.Generated.Text,
-            };
-            return solarData;
-        }
     }
 }

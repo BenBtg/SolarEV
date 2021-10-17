@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Xml;
 using System;
 using System.IO;
 using System.Net;
@@ -73,7 +75,7 @@ namespace SolarEV.Services
                         bytes = new Byte[1024];
                         multicastSocket.ReceiveFrom(bytes, ref remoteEP);
 
-                        NewMethod(bytes, solarSerializer);
+                        NewMethod(bytes);
                     }
 
                     //   Console.WriteLine(document.SelectSingleNode("electricity").InnerText);
@@ -90,7 +92,7 @@ namespace SolarEV.Services
             }
         }
 
-        private void NewMethod(byte[] bytes, XmlSerializer solarSerializer)
+        private void NewMethod(byte[] bytes)
         {
             //var text = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
             // HACK Ignore electricity price messages for now
@@ -98,15 +100,22 @@ namespace SolarEV.Services
             {
                 //Console.WriteLine("Received broadcast from {0} :\n {1}\n", remoteEP.ToString(), text);
 
-                MemoryStream doc = new MemoryStream(bytes);
-                // var document = new XmlDocument();
-                // document.Load(doc);
-                // Console.WriteLine(document.OuterXml);
+                try
+                {
+                    MemoryStream doc = new MemoryStream(bytes);
+                    // var document = new XmlDocument();
+                    // document.Load(doc);
+                    // Console.WriteLine(document.OuterXml);
 
-                var solarData = (Solar)solarSerializer.Deserialize(doc);
-                Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
+                    var solarData = (Solar)_solarSerializer.Deserialize(doc);
+                    Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
 
-                SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
+                    SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
+                }
+                catch (XmlException ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
             }
         }
 

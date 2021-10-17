@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SolarEV.IoT
 {
-    public interface IDeviceConfigService
+    public interface IDeviceConfig
     {
         string DpsGlobalEndpoint { get; }
         string DeviceId { get; set; }
