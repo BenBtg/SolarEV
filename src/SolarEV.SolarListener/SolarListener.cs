@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Microsoft.Extensions.Logging;
 using SolarEV.Models;
 
 namespace SolarEV.Services
@@ -16,13 +17,14 @@ namespace SolarEV.Services
         private static int multicastPort;
         private static Socket multicastSocket;
         private static MulticastOption multicastOption;
-        private static XmlSerializer _solarSerializer;
+        private readonly ILogger<SolarListener> _log;
+
 
         public event EventHandler<SolarMessageEventArgs> SolarMessageReceived;
 
-        public SolarListener()
+        public SolarListener(ILogger<SolarListener> log)
         {
-            XmlSerializer _solarSerializer = new XmlSerializer(typeof(Solar));
+            _log = log;
         }
 
         private void StartMulticast()
@@ -53,7 +55,7 @@ namespace SolarEV.Services
 
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                _log.LogError(exception:e, message:e.Message);
             }
         }
 
@@ -75,7 +77,7 @@ namespace SolarEV.Services
                         bytes = new Byte[1024];
                         multicastSocket.ReceiveFrom(bytes, ref remoteEP);
 
-                        NewMethod(bytes);
+                        ProcessPacket(bytes);
                     }
 
                     //   Console.WriteLine(document.SelectSingleNode("electricity").InnerText);
@@ -92,29 +94,29 @@ namespace SolarEV.Services
             }
         }
 
-        private void NewMethod(byte[] bytes)
+        private void ProcessPacket(byte[] bytes)
         {
             //var text = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
             // HACK Ignore electricity price messages for now
+            MemoryStream doc = new(bytes);
+            
             if (bytes[1] != 101)
             {
                 //Console.WriteLine("Received broadcast from {0} :\n {1}\n", remoteEP.ToString(), text);
-
                 try
                 {
-                    MemoryStream doc = new MemoryStream(bytes);
-                    // var document = new XmlDocument();
-                    // document.Load(doc);
-                    // Console.WriteLine(document.OuterXml);
-
-                    var solarData = (Solar)_solarSerializer.Deserialize(doc);
+                    var solarSerializer = new XmlSerializer(typeof(Solar));
+                    var solarData = (Solar)solarSerializer.Deserialize(doc);
                     Console.WriteLine($"Solar broadcast received: Generating {solarData.Current.Generating.Text} - Export {solarData.Current.Exporting.Text}");
 
                     SolarMessageReceived?.Invoke(this, new SolarMessageEventArgs(solarData));
                 }
                 catch (XmlException ex)
                 {
-                    Debug.WriteLine(ex.Message);
+                    doc.Position = 0;
+                    var document = new XmlDocument();
+                    document.Load(doc);
+                    _log.LogError(ex, document.OuterXml);
                 }
             }
         }

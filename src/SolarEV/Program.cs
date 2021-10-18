@@ -1,42 +1,66 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
-using SolarEV.Services;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SolarEV.IoT;
 using System.Threading;
+using Microsoft.Extensions.Configuration;
+using Serilog;
 using SolarEV.IoT.Models;
-using SolarEV.Models;
+using SolarEV.Services;
 
-namespace SolarEV.TransportProtocols.Utilities
+namespace SolarEV
 {
-    public class SolarEV
+    internal sealed class Program
     {
-        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
-        static IIoTDeviceClientService _deviceClientService;
         public static async Task Main(string[] args)
         {
-            // instantiate startup
-            // all the constructor logic would happen
-            var startup = new Startup();
+            var host = AppStartup();
 
+            await host.RunConsoleAsync();
+        }
+        
+        static IHostBuilder AppStartup()
+        {
+            var builder = new ConfigurationBuilder();
+            BuildConfig(builder);
 
-            await Host.CreateDefaultBuilder(args)
+            // Specifying the configuration for serilog
+            Log.Logger = new LoggerConfiguration() // initiate the logger configuration
+                .ReadFrom.Configuration(builder.Build()) // connect serilog to our configuration folder
+                .Enrich.FromLogContext() //Adds more information to our logs from built in Serilog 
+                .WriteTo.Console() // decide where the logs are going to be shown
+                .CreateLogger(); //initialise the logger
+
+            Log.Logger.Information("Application Starting");
+
+            var host = Host.CreateDefaultBuilder() // Initialising the Host 
+                .UseContentRoot(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<ConsoleHostedService>();
-                })
-                .RunConsoleAsync();
+                    // Adding the DI container for configuration
+//                    services.AddSingleton<IConfiguration>(_configuration);
+                    services.AddHostedService<ConsoleHostedService>()
+                            .AddSingleton<ISolarListener, SolarListener>()
+                            .AddSingleton<IIoTDeviceClientService, IoTDeviceClientService>();
+                    
+                    services.AddOptions<DeviceConfig>().Bind(hostContext.Configuration.GetSection("DeviceConfig"));
+                });
 
-            Console.WriteLine("End");
-
+            return host;
         }
 
+        static void BuildConfig(IConfigurationBuilder builder)
+        {
+            var environment = Environment.GetEnvironmentVariable("ASPNET_ENVIRONMENT");
+            builder.SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
 
+        }
     }
 }

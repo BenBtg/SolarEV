@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Build;
 using Cake.Common.IO;
 using Cake.Common.IO.Paths;

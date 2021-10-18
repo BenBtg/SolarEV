@@ -37,10 +37,7 @@ namespace SolarEV
             var services = new ServiceCollection();
 
             // add necessary services
-            services.AddSingleton<IConfiguration>(_configuration);
-            services.AddSingleton<ISolarListener, SolarListener>();
-            services.AddSingleton<IDeviceConfigService, DeviceConfigService>();
-            services.AddSingleton<IIoTDeviceClientService, IoTDeviceClientService>();
+
 
             // build the pipeline
             _provider = services.BuildServiceProvider();

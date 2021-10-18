@@ -1,5 +1,4 @@
 ﻿using SolarEV.IoT.Models;
-using Microsoft.Azure.Devices.Client;
 using System;
 using System.Threading.Tasks;
 

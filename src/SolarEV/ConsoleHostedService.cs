@@ -4,36 +4,38 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarEV.IoT;
+using SolarEV.IoT.Models;
+using SolarEV.Models;
 using SolarEV.Services;
 
 namespace SolarEV
 {
     internal sealed class ConsoleHostedService : IHostedService
     {
-        private readonly ILogger _logger;
+        private readonly ILogger _log;
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly ISolarListener _solarListener;
-        private readonly IDeviceConfig _deviceConfig;
+        private readonly IIoTDeviceClientService _deviceClient;
 
         private int? _exitCode;
 
         public ConsoleHostedService(
-            ILogger<ConsoleHostedService> logger,
+            ILogger<ConsoleHostedService> log,
             IHostApplicationLifetime appLifetime,
             ISolarListener solarListener,
-            IDeviceConfig deviceConfig)
+            IIoTDeviceClientService deviceClientService)
         {
-            _logger = logger;
+            _log = log;
             _appLifetime = appLifetime;
             _solarListener = solarListener;
-            _deviceConfig = deviceConfig;
+            _deviceClient = deviceClientService;
             
             _solarListener.SolarMessageReceived += SolarListener_SolarMessageReceived;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug($"Starting with arguments: {string.Join(" ", Environment.GetCommandLineArgs())}");
+            _log.LogDebug($"Starting with arguments: {string.Join(" ", Environment.GetCommandLineArgs())}");
 
             _appLifetime.ApplicationStarted.Register(() =>
             {
@@ -41,24 +43,16 @@ namespace SolarEV
                 {
                     try
                     {
-                        
-                            
+                        await _deviceClient.ConnectAsync();
                         await _solarListener.StartListeningAsync();
-
-                        while (true)
-                        {
-                            
-                        }
                         
+                        _log.LogInformation($"Started");
                    
-                        _logger.LogInformation($"{DateTime.Today.AddDays(i).DayOfWeek}: {temperatures[i]}");
-                   
-
                         _exitCode = 0;
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Unhandled exception!");
+                        _log.LogError(ex, "Unhandled exception!");
                         _exitCode = 1;
                     }
                     finally
@@ -74,7 +68,7 @@ namespace SolarEV
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug($"Exiting with return code: {_exitCode}");
+            _log.LogDebug($"Exiting with return code: {_exitCode}");
 
             // Exit code may be null if the user cancelled via Ctrl+C/SIGTERM
             Environment.ExitCode = _exitCode.GetValueOrDefault(-1);
@@ -82,14 +76,13 @@ namespace SolarEV
         }
         
         
+        /*
         public void StartAsync()
         {
             // request an instance of type ISomeService
             // from the ServicePipeline built
             // returns an object of type SomeService
-            
-            var deviceConfigService = startup.Provider.GetRequiredService<IDeviceConfigService>();
-            var deviceID = startup.Configuration["DeviceID"];
+            var deviceID = _deviceConfig.DeviceId;
 
             deviceConfigService.DeviceId = deviceID;
             deviceConfigService.DeviceKey = startup.Configuration["PrimaryKey"];
@@ -103,22 +96,19 @@ namespace SolarEV
             // fetched from IConfiguration
             // injected into the class via DI
 
-
-
             solarListener.SolarMessageReceived += SolarListener_SolarMessageReceived;
 
             await _deviceClientService.ConnectAsync();
             await solarListener.StartListeningAsync();
 
         }
+        */
         
-        
-        
-        private static async void SolarListener_SolarMessageReceived(object sender, SolarMessageEventArgs e)
+        private async void SolarListener_SolarMessageReceived(object sender, SolarMessageEventArgs e)
         {
             Console.WriteLine(e.Data.Day.Generated);
             var solarData = ConvertSolarToJson(e.Data);
-            await _deviceClientService.SendEventAsync(solarData);
+            await _deviceClient.SendEventAsync(solarData);
         }
 
         static Telemetries ConvertSolarToJson(Solar solar)

@@ -8,13 +8,16 @@ using System;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace SolarEV.IoT
 {
     public class IoTDeviceClientService : IIoTDeviceClientService
     {
         private DeviceClient _deviceClient;
-        private IDeviceConfigService _deviceConfigService;
+        private readonly IOptions<DeviceConfig> _deviceConfig;
+        private readonly ILogger<IIoTDeviceClientService> _log;
 
         #region IIoTDeviceClientService
 
@@ -31,7 +34,7 @@ namespace SolarEV.IoT
                 ConnectionStatusChanged?.Invoke(this, LastKnownConnectionStatus);
 
                 if (_lastKnownConnectionStatus == ConnectionProgressStatus.Connected)
-                    Debug.WriteLine("Connected to IoT Hub", $"Registered Device Id: {_deviceConfigService.DeviceId}");
+                    Debug.WriteLine("Connected to IoT Hub", $"Registered Device Id: {_deviceConfig.Value.DeviceID}");
                 else
                     Debug.WriteLine("Connection status changed", $"IoT Hub connection status: {_lastKnownConnectionStatus}");
             }
@@ -41,9 +44,10 @@ namespace SolarEV.IoT
 
         public event EventHandler<ConnectionProgressStatus> ConnectionStatusChanged;
 
-        public IoTDeviceClientService(IDeviceConfigService deviceConfigService)
+        public IoTDeviceClientService(IOptions<DeviceConfig> deviceConfig, ILogger<IIoTDeviceClientService> log)
         {
-            _deviceConfigService = deviceConfigService;
+            _deviceConfig = deviceConfig;
+            _log = log;
             LastKnownConnectionStatus = ConnectionProgressStatus.Disconnected;
         }
 
@@ -55,10 +59,10 @@ namespace SolarEV.IoT
 
         public async Task<bool> ConnectAsync()
         {
-            var deviceId = _deviceConfigService.DeviceId;
-            var deviceKey = _deviceConfigService.DeviceKey;
+            var deviceId = _deviceConfig.Value.DeviceID;
+            var deviceKey = _deviceConfig.Value.PrimaryKey;
 
-            if (string.IsNullOrEmpty(_deviceConfigService.AssignedEndPoint))
+            if (string.IsNullOrEmpty(_deviceConfig.Value.AssignedEndPoint))
             {
                 Debug.WriteLine($"Provisioning device: {deviceId}");
                 await ProvisionAsync();
@@ -66,12 +70,12 @@ namespace SolarEV.IoT
 
             var options = new ClientOptions
             {
-                ModelId = _deviceConfigService.ModelId
+                ModelId = _deviceConfig.Value.ModelId
             };
 
             var authMethod = new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey);
 
-            var csBuilder = IotHubConnectionStringBuilder.Create(_deviceConfigService.AssignedEndPoint, authMethod);
+            var csBuilder = IotHubConnectionStringBuilder.Create(_deviceConfig.Value.AssignedEndPoint, authMethod);
             string connectionString = csBuilder.ToString();
 
             _deviceClient = DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt, options);
@@ -101,7 +105,7 @@ namespace SolarEV.IoT
             return true;
         }
 
-        public async Task SendReportedPropertiesAsync(ReportedDeviceProperties reportedDeviceProperties)
+        /*public async Task SendReportedPropertiesAsync(ReportedDeviceProperties reportedDeviceProperties)
         {
             if (LastKnownConnectionStatus != ConnectionProgressStatus.Connected)
                 return;
@@ -115,7 +119,7 @@ namespace SolarEV.IoT
             var deviceInfo = reportedDeviceProperties.DeviceInfo;
             var formattedValue = $"Manufacturer: {deviceInfo.Manufacturer}\nModel: {deviceInfo.Model}\nOsName: {deviceInfo.OsName}\nProcessorArchitecture: {deviceInfo.ProcessorArchitecture}\nProcessorManufacturer: {deviceInfo.ProcessorManufacturer}\nSwVersion: {deviceInfo.SwVersion}\nTotalMemory: {deviceInfo.TotalMemory}\nTotalStorage: {deviceInfo.TotalStorage}";
             Debug.WriteLine($"Device properties sent to hub", formattedValue);
-        }
+        }*/
 
         public async Task SendEventAsync(Telemetries solarData)
         {
@@ -162,11 +166,11 @@ namespace SolarEV.IoT
 
         private async Task<bool> ProvisionAsync()
         {
-            var dpsGlobalEndpoint = _deviceConfigService.DpsGlobalEndpoint;
-            var dpsIdScope = _deviceConfigService.ScopeId;
-            var deviceId = _deviceConfigService.DeviceId;
-            var modelId = _deviceConfigService.ModelId;
-            var dpsSymetricKey = _deviceConfigService.DeviceKey;
+            var dpsGlobalEndpoint = _deviceConfig.Value.DpsGlobalEndpoint;
+            var dpsIdScope = _deviceConfig.Value.IDScope;
+            var deviceId = _deviceConfig.Value.DeviceID;
+            var modelId = _deviceConfig.Value.ModelId;
+            var dpsSymetricKey = _deviceConfig.Value.PrimaryKey;
 
             Debug.WriteLine("Provisioning device...");
 
@@ -175,7 +179,7 @@ namespace SolarEV.IoT
             using (var security = new SecurityProviderSymmetricKey(deviceId, dpsSymetricKey, null))
             {
                 Debug.WriteLine($"Security: {deviceId},{dpsSymetricKey}");
-                using (var transport = new ProvisioningTransportHandlerAmqp())
+                using (var transport = new ProvisioningTransportHandlerMqtt())
                 {
                     var provisioningClient = ProvisioningDeviceClient.Create(dpsGlobalEndpoint, dpsIdScope, security, transport);
 
@@ -185,7 +189,7 @@ namespace SolarEV.IoT
 
                     if (regResult.Status == ProvisioningRegistrationStatusType.Assigned)
                     {
-                        _deviceConfigService.AssignedEndPoint = regResult.AssignedHub;
+                        _deviceConfig.Value.AssignedEndPoint = regResult.AssignedHub;
                         LastKnownConnectionStatus = ConnectionProgressStatus.Provisioned;
                     }
                     Debug.WriteLine($"Provisioned device: {deviceId}");
