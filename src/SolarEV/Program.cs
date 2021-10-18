@@ -1,82 +1,66 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
-using SolarEV.Services;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SolarEV.IoT;
 using System.Threading;
+using Microsoft.Extensions.Configuration;
+using Serilog;
 using SolarEV.IoT.Models;
-using SolarEV.Models;
+using SolarEV.Services;
 
-namespace SolarEV.TransportProtocols.Utilities
+namespace SolarEV
 {
-    public class SolarEV
+    internal sealed class Program
     {
-        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
-        static IIoTDeviceClientService _deviceClientService;
         public static async Task Main(string[] args)
         {
-            // instantiate startup
-            // all the constructor logic would happen
-            var startup = new Startup();
+            var host = AppStartup();
 
-            // request an instance of type ISomeService
-            // from the ServicePipeline built
-            // returns an object of type SomeService
-            var solarListener = startup.Provider.GetRequiredService<ISolarListener>();
-            var deviceConfigService = startup.Provider.GetRequiredService<IDeviceConfigService>();
-            var deviceID = startup.Configuration["DeviceID"];
+            await host.RunConsoleAsync();
+        }
+        
+        static IHostBuilder AppStartup()
+        {
+            var builder = new ConfigurationBuilder();
+            BuildConfig(builder);
 
-            deviceConfigService.DeviceId = deviceID;
-            deviceConfigService.DeviceKey = startup.Configuration["PrimaryKey"];
-            deviceConfigService.ScopeId = startup.Configuration["IDScope"];
+            // Specifying the configuration for serilog
+            Log.Logger = new LoggerConfiguration() // initiate the logger configuration
+                .ReadFrom.Configuration(builder.Build()) // connect serilog to our configuration folder
+                .Enrich.FromLogContext() //Adds more information to our logs from built in Serilog 
+                .WriteTo.Console() // decide where the logs are going to be shown
+                .CreateLogger(); //initialise the logger
 
-            _deviceClientService = startup.Provider.GetRequiredService<IIoTDeviceClientService>();
+            Log.Logger.Information("Application Starting");
 
+            var host = Host.CreateDefaultBuilder() // Initialising the Host 
+                .UseContentRoot(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
+                .ConfigureServices((hostContext, services) =>
+                {
+                    // Adding the DI container for configuration
+//                    services.AddSingleton<IConfiguration>(_configuration);
+                    services.AddHostedService<ConsoleHostedService>()
+                            .AddSingleton<ISolarListener, SolarListener>()
+                            .AddSingleton<IIoTDeviceClientService, IoTDeviceClientService>();
+                    
+                    services.AddOptions<DeviceConfig>().Bind(hostContext.Configuration.GetSection("DeviceConfig"));
+                });
 
-            // call DoProcess on the ISomeService type
-            // should print value for SomeKey on console
-            // fetched from IConfiguration
-            // injected into the class via DI
-
-
-
-            solarListener.SolarMessageReceived += SolarListener_SolarMessageReceived;
-
-            await _deviceClientService.ConnectAsync();
-            await solarListener.StartListeningAsync();
-
-
-            _quitEvent.WaitOne();
-            Console.WriteLine("End");
-
+            return host;
         }
 
-        private static async void SolarListener_SolarMessageReceived(object sender, SolarMessageEventArgs e)
+        static void BuildConfig(IConfigurationBuilder builder)
         {
-            Console.WriteLine(e.Data.Day.Generated);
-            var solarData = ConvertSolarToJson(e.Data);
-            await _deviceClientService.SendEventAsync(solarData);
-        }
+            var environment = Environment.GetEnvironmentVariable("ASPNET_ENVIRONMENT");
+            builder.SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
 
-        static Telemetries ConvertSolarToJson(Solar solar)
-        {
-            //var solarData = new SolarData();
-            var solarData = new Telemetries
-            {
-                Id = solar.Id,
-                Timestamp = solar.Timestamp,
-                Exporting = solar.Current.Exporting.Text,
-                Exported = solar.Day.Exported.Text,
-                Generating = solar.Current.Generating.Text,
-                Generated = solar.Day.Generated.Text,
-            };
-            return solarData;
         }
     }
 }
