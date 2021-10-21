@@ -116,6 +116,7 @@ namespace SolarEV.Services
                     doc.Position = 0;
                     var document = new XmlDocument();
                     document.Load(doc);
+                    _log.LogError($"Second byte is: {bytes[1]}");
                     _log.LogError(ex, document.OuterXml);
                 }
             }
