@@ -13,19 +13,16 @@ namespace SolarEV.Services
 {
     public class SolarListener : ISolarListener
     {
-        private static IPAddress multicastAddress;
-        private static int multicastPort;
-        private static Socket multicastSocket;
-        private static MulticastOption multicastOption;
+        private IPAddress multicastAddress;
+        private int multicastPort;
+        private Socket multicastSocket;
+        private MulticastOption? multicastOption;
         private readonly ILogger<SolarListener> _log;
 
 
         public event EventHandler<SolarMessageEventArgs> SolarMessageReceived;
 
-        public SolarListener(ILogger<SolarListener> log)
-        {
-            _log = log;
-        }
+        public SolarListener(ILogger<SolarListener> log) => _log = log;
 
         private void StartMulticast()
         {
@@ -34,8 +31,8 @@ namespace SolarEV.Services
                 multicastSocket = new Socket(AddressFamily.InterNetwork,
                                          SocketType.Dgram,
                                          ProtocolType.Udp);
-
                 IPAddress localIPAddr = IPAddress.Parse("10.0.0.168");
+                _log.LogInformation("Local IP Address: " + localIPAddr.ToString());
 
                 //IPAddress localIP = IPAddress.Any;
                 EndPoint localEP = (EndPoint)new IPEndPoint(localIPAddr, multicastPort);
@@ -68,7 +65,8 @@ namespace SolarEV.Services
 
             while (true)
             {
-                Console.WriteLine("Waiting for multicast packets.......");
+                _log.LogInformation("Waiting for broadcast");
+                _log.LogInformation(remoteEP.ToString());
                 try
                 {
 
@@ -79,16 +77,15 @@ namespace SolarEV.Services
 
                         ProcessPacket(bytes);
                     }
-
-                    //   Console.WriteLine(document.SelectSingleNode("electricity").InnerText);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    _log.LogError(exception:e, message:e.Message);
                 }
                 finally
                 {
                     multicastSocket.Close();
+                    _log.LogInformation("Socket closed");
                     StartMulticast();
                 }
             }
@@ -96,10 +93,8 @@ namespace SolarEV.Services
 
         private void ProcessPacket(byte[] bytes)
         {
-            //var text = Encoding.ASCII.GetString(bytes, 0, bytes.Length);
-            // HACK Ignore electricity price messages for now
             MemoryStream doc = new(bytes);
-            
+            // HACK Ignore electricity price messages for now
             if (bytes[1] != 101)
             {
                 //Console.WriteLine("Received broadcast from {0} :\n {1}\n", remoteEP.ToString(), text);
@@ -126,17 +121,27 @@ namespace SolarEV.Services
         {
             return Task.Run(() =>
             {
-                multicastAddress = IPAddress.Parse("224.192.32.19");
-                multicastPort = 22600;
+                while (true)
+                {
+                    try
+                    {
+                        multicastAddress = IPAddress.Parse("224.192.32.19");
+                        multicastPort = 22600;
 
-                // Start a multicast group.
-                StartMulticast();
+                        // Start a multicast group.
+                        StartMulticast();
 
-                Console.WriteLine("Current multicast group is: " + multicastOption.Group);
-                Console.WriteLine("Current multicast local address is: " + multicastOption.LocalAddress);
+                        Console.WriteLine("Current multicast group is: " + multicastOption.Group);
+                        Console.WriteLine("Current multicast local address is: " + multicastOption.LocalAddress);
 
-                // Receive broadcast messages.
-                ReceiveBroadcastMessages();
+                        // Receive broadcast messages.
+                        ReceiveBroadcastMessages();
+                    }
+                    catch (Exception e)
+                    {
+                        _log.LogCritical(exception:e, message:e.Message);
+                    }
+                }
             });
         }
 
