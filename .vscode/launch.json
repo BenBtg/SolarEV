@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/SolarEV/bin/Debug/net5.0/SolarEV.exe",
+            "program": "${workspaceFolder}/src/SolarEV/bin/Debug/net5.0/SolarEV.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/SolarEV",
             "console": "internalConsole",
@@ -19,6 +19,15 @@
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
+        },
+        {
+            "name": "Docker .NET Core Launch",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run: debug",
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/SolarEV/SolarEV.csproj"
+            }
         }
     ]
 }

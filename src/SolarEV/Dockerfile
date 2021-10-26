@@ -3,10 +3,10 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["SolarEV/SolarEV.csproj", "SolarEV/"]
-RUN dotnet restore "SolarEV\SolarEV.csproj"
+COPY ["src/SolarEV/SolarEV.csproj", "src/SolarEV/"]
+RUN dotnet restore "src\SolarEV\SolarEV.csproj"
 COPY . .
-WORKDIR "/src/SolarEV"
+WORKDIR "/src/src/SolarEV"
 RUN dotnet build "SolarEV.csproj" -c Release -o /app/build
 
 FROM build AS publish

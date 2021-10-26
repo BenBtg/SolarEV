@@ -47,12 +47,12 @@
             "dockerBuild": {
                 "tag": "solarev:dev",
                 "target": "base",
-                "dockerfile": "${workspaceFolder}/SolarEV/Dockerfile",
+                "dockerfile": "${workspaceFolder}/src/SolarEV/Dockerfile",
                 "context": "${workspaceFolder}",
                 "pull": true
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/SolarEV/SolarEV.csproj"
+                "appProject": "${workspaceFolder}/src/SolarEV/SolarEV.csproj"
             }
         },
         {
@@ -63,12 +63,12 @@
             ],
             "dockerBuild": {
                 "tag": "solarev:latest",
-                "dockerfile": "${workspaceFolder}/SolarEV/Dockerfile",
+                "dockerfile": "${workspaceFolder}/src/SolarEV/Dockerfile",
                 "context": "${workspaceFolder}",
                 "pull": true
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/SolarEV/SolarEV.csproj"
+                "appProject": "${workspaceFolder}/src/SolarEV/SolarEV.csproj"
             }
         },
         {
@@ -81,7 +81,7 @@
                 "os": "Windows"
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/SolarEV/SolarEV.csproj",
+                "appProject": "${workspaceFolder}/src/SolarEV/SolarEV.csproj",
                 "enableDebugging": true
             }
         },
@@ -95,7 +95,7 @@
                 "os": "Windows"
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/SolarEV/SolarEV.csproj"
+                "appProject": "${workspaceFolder}/src/SolarEV/SolarEV.csproj"
             }
         }
     ]
